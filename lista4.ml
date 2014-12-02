@@ -18,10 +18,13 @@ type 'a btree = Leaf | Node of 'a btree * 'a * 'a btree;;
 let rec check_balanced t =  
   let rec count_sons = function
     | Leaf -> (0, true)
-    | Node(l, _, r) -> let (l, x) = count_sons l and (r, y) = count_sons r in
-      if (((l + 1 = r) || (l = r+1) || (l=r)) && x && y) 
-        then (l + r + 1, true)
-        else (l + r + 1, false)
+    | Node(l, _, r) -> let (l, x) = count_sons l in
+      if x then
+        let (r, y) = count_sons r in
+          if (((l + 1 = r) || (l = r+1) || (l=r)) && y) 
+          then (l + r + 1, true)
+          else (0, false)
+      else (0, false)
     in let (a, b) = count_sons t
     in b;;
 
@@ -53,7 +56,7 @@ let list_to_btree xs =
 
 assert(list_to_btree [1;2;3] = Node(Node(Leaf, 2, Leaf), 1, Node(Leaf, 3, Leaf)));;
 
-
+(* zadanie domowe *)
 (* zadanie 3 *)
 
 type 'a mtree = MNode of 'a * 'a forest
@@ -263,7 +266,7 @@ let prod t =
   let rec prod_cps k = function
     | Leaf -> k 1
     | Node (_, 0, _) -> 0
-    | Node (l, a, r) -> prod_cps (fun x -> (a * x * (prod_cps k r)) ) l
+    | Node (l, a, r) -> prod_cps (fun x -> prod_cps (fun y -> k (x * a * y)) r) l
   in prod_cps (fun v -> v) t;;
 
 assert(prod (Node(Node(Node(Node(Leaf, 2, Leaf), 3, Node(Leaf, 3, Node(Leaf, 12, Leaf))), 4,
