@@ -64,7 +64,7 @@ let rec insert comp x = function
   | h :: t -> x :: h :: t
 ;;
 
-let rec insort comp = 
+let insort comp = 
   let rec aux acc = function
     | [] -> acc
     | h :: t -> aux (insert comp  h acc) t
@@ -79,3 +79,30 @@ let pair_comp (a, _) (b, _) =
 
 assert(insort pair_comp [(1,2); (1,3); (1,4)] = [(1,2); (1,3); (1,4)]);;
 
+let split l = 
+  let rec aux acc1 acc2 = function
+    | [] | [_] -> ((List.rev acc1), acc2)
+    | _ :: _ :: t -> 
+        let (x :: xs) = acc2 in
+        aux (x :: acc1) (xs) t
+  in aux [] l l
+;;
+
+let rec merge comp t1 t2 = match (t1, t2) with
+  | ([], _) -> t2
+  | (_, []) -> t1
+  | (x1 :: xs1, x2 :: xs2) ->
+      if comp x1 x2 < 0 then x1 :: (merge comp xs1 t2)
+      else if comp x1 x2 = 0 then x1 :: x2 :: (merge comp xs1 xs2)
+      else x2 :: (merge comp t1 xs2)
+;;
+
+let rec mergesort comp = function
+  | [] -> []
+  | [x] -> [x]
+  | xs ->
+      let (left, right) = split xs in
+        merge comp (mergesort comp left) (mergesort comp right)
+;;
+
+mergesort pair_comp [(1,2);(1,3);(1,4)];;
