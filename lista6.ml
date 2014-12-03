@@ -19,11 +19,13 @@ assert (checkfringe
   (Node(Node(Leaf 1, Leaf 2), Leaf 3)) (Node(Leaf 1, (Node(Leaf 2, Leaf 3)))) 
     = true);;
 
-(* nalezy odroczyc trawersowanie prawego poddrzewa. Yay, kontynuacje! *)
-let smart_checkfringe t1 t2 = checkfringe t1 t2;;
+(* w zadaniu chodziło o to, zeby pobrac brzegi a potem sprawdzac rownosc dwoch list. Bez patrzenia na efektywnosc: po prostu zwykle listy, z efektywnoscia: listy leniwe *)
 
 (* zadanie 2 *)
 type 'a btree = Leaf of 'a | Node of 'a btree * 'a * 'a btree;;
+
+
+(* ta funkcja zupelnie nie dziala! *)
 
 let numerate_preorder t = 
   let rec aux t n k = match t with
@@ -34,6 +36,13 @@ let numerate_preorder t =
 ;;
 
 numerate_preorder (Node(Node(Leaf 'a', 'b', Leaf 'c'), 'd', Leaf 'e'));;
+
+let t1 = Node(Leaf 'x', 'x', Leaf 'x');;
+
+let t2 = Node(t1, 'x', t1);;
+
+numerate_preorder t2;;
+failwith "x";;
 
 (* let numerate_bfs t = 
   let rec aux bts n =
@@ -63,6 +72,10 @@ numerate_preorder (Node(Node(Leaf 'a', 'b', Leaf 'c'), 'd', Leaf 'e'));;
  * a to wszystko dla pojedynczego korzenia *)
 
 (* zadanie 3 *)
+
+(* Ważne: jesli rozwazamy kontynuacje, trzeba ja jakos przekazac wyzej [a w zasadzie nizej]. Inaczej to wszystko jest bez sensu. *)
+
+
 type 'a btree = Leaf | Node of 'a btree * 'a * 'a btree;;
 
 type 'a array = Array of int * 'a btree;;
@@ -88,9 +101,9 @@ let aupdate a n x =
     let (Node(left, value, right)) = bt in
       if n = 1 then k (Node(left, x, right))
       else if n mod 2 = 1 then 
-        aux right (n / 2) (fun new_right -> Node(left, value, new_right))
+        aux right (n / 2) (fun new_right -> k (Node(left, value, new_right)))
       else
-        aux left (n / 2) (fun new_left -> Node(new_left, value, right))
+        aux left (n / 2) (fun new_left -> k (Node(new_left, value, right)))
   in 
   let Array(fst_a, snd_a) = a in 
   if n > (fst_a) then failwith "Out of bound exception"
@@ -103,9 +116,9 @@ let ahiext a x =
       if n = 2 then k (Node(Node(Leaf, x, Leaf), value, right))
       else if n = 3 then k (Node(left, value, Node(Leaf, x, Leaf)))
       else if n mod 2 = 1 then
-        aux right (n / 2) (fun new_right -> Node(left, value, new_right))
+        aux right (n / 2) (fun new_right -> k (Node(left, value, new_right)))
       else
-        aux left (n / 2) (fun new_left -> Node(new_left, value, right))
+        aux left (n / 2) (fun new_left -> k (Node(new_left, value, right)))
   in 
   let Array(fst_a, snd_a) = a in 
   if (fst_a) = 0 then Array(1, (Node(Leaf, x, Leaf)))
@@ -117,9 +130,9 @@ let ahirem a =
     let (Node(left, value, right)) = bt in
       if n = 1 then k (Leaf)
       else if n mod 2 = 1 then
-        aux right (n / 2) (fun new_right -> Node(left, value, new_right))
+        aux right (n / 2) (fun new_right -> k (Node(left, value, new_right)))
       else
-        aux left (n / 2) (fun new_left -> Node(new_left, value, right))
+        aux left (n / 2) (fun new_left -> k (Node(new_left, value, right)))
   in
   let Array(fst_a, snd_a) = a in 
   if (fst_a) = 0 then failwith "Empty table!"
